@@ -1,0 +1,869 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Guia da Prova Full Stack</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a viagem de uma requisição. O topo mostra as 5 paradas (formulário → método → rota → banco → EJS) e cada bloco abaixo é uma parada; código sempre em blocos escuros com botão de copiar */
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eaeef4;
+  --ink: #141820;
+  --ink-2: #4a5263;
+  --line: #d8dee8;
+  --accent: #2f6fd6;
+  --accent-soft: #e3ecfb;
+  --get: #0f7a62;
+  --get-soft: #dcf2ec;
+  --post: #b4520f;
+  --post-soft: #fbe9dc;
+  --code-bg: #141821;
+  --code-ink: #e6e9f0;
+  --code-dim: #8a93a6;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101319; --surface: #171b23; --surface-2: #1f2430; --ink: #e9ecf2; --ink-2: #a9b0bf; --line: #2a303d;
+    --accent: #6c9cf0; --accent-soft: #1d2a42; --get: #3fc29f; --get-soft: #12312a; --post: #f0965a; --post-soft: #3a2415;
+    --code-bg: #0b0e13; --code-ink: #e6e9f0; --code-dim: #7d869a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101319; --surface: #171b23; --surface-2: #1f2430; --ink: #e9ecf2; --ink-2: #a9b0bf; --line: #2a303d;
+  --accent: #6c9cf0; --accent-soft: #1d2a42; --get: #3fc29f; --get-soft: #12312a; --post: #f0965a; --post-soft: #3a2415;
+  --code-bg: #0b0e13; --code-ink: #e6e9f0; --code-dim: #7d869a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; }
+
+.wrap {
+  max-width: 900px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* navegação */
+.topnav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topnav .wrap { display: flex; gap: 4px; padding-block: 10px; overflow-x: auto; }
+.topnav a { color: var(--ink-2); text-decoration: none; font-size: 14px; font-weight: 500; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+.topnav a:hover { background: var(--surface-2); color: var(--ink); }
+
+/* topo */
+.hero { padding-block: 44px 28px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 10px; }
+h1 { font-family: var(--font-head); font-size: clamp(32px, 6vw, 52px); line-height: 1.05; margin: 0 0 14px; text-wrap: balance; }
+.lead { font-size: 18px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+
+/* a viagem */
+.trip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 28px; }
+.stop { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; gap: 4px; position: relative; min-width: 0; }
+.stop:hover { border-color: var(--accent); }
+.stop .n { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
+.stop strong { font-family: var(--font-head); font-size: 16px; }
+.stop span.d { font-size: 13px; color: var(--ink-2); }
+.stop:not(:last-child)::after { content: "→"; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); color: var(--ink-2); font-size: 14px; background: var(--bg); line-height: 1; }
+.analogia { margin-top: 16px; background: var(--accent-soft); border-radius: 12px; padding: 14px 16px; font-size: 15px; }
+.analogia p { margin: 0; }
+
+/* seções */
+section.block { padding-block: 40px; border-top: 1px solid var(--line); }
+h2 { font-family: var(--font-head); font-size: clamp(24px, 4vw, 32px); line-height: 1.15; margin: 0 0 8px; text-wrap: balance; }
+h2 .tag { display: inline-block; font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--ink-2); vertical-align: middle; margin-right: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+h3 { font-family: var(--font-head); font-size: 19px; margin: 28px 0 8px; text-wrap: balance; }
+.section-lead { color: var(--ink-2); max-width: 65ch; margin: 0 0 8px; }
+p { max-width: 70ch; margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-left: 22px; max-width: 70ch; }
+li { margin-bottom: 5px; }
+
+/* tabelas */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin: 8px 0 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+
+/* métodos */
+.m { font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.m.get { color: var(--get); background: var(--get-soft); }
+.m.post { color: var(--post); background: var(--post-soft); }
+
+/* código */
+figure.code { margin: 10px 0 16px; background: var(--code-bg); border-radius: 12px; overflow: hidden; }
+figure.code figcaption { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); font-family: var(--font-mono); font-size: 12px; color: var(--code-dim); min-height: 36px; }
+figure.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; }
+figure.code code { background: none; padding: 0; color: var(--code-ink); font-size: 13px; line-height: 1.6; white-space: pre; }
+button.copy { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--code-ink); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 4px 10px; cursor: pointer; margin-left: auto; }
+button.copy:hover { background: rgba(255,255,255,0.16); }
+
+.note { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 10px 0 14px; font-size: 15px; }
+.note p:last-child { margin-bottom: 0; }
+
+/* checklist */
+.check { list-style: none; padding: 0; }
+.check li { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.check input { margin-top: 5px; width: 16px; height: 16px; accent-color: var(--accent); flex: 0 0 auto; }
+
+footer { padding-block: 28px 44px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 14px; }
+
+@media (max-width: 760px) {
+  .trip { grid-template-columns: 1fr; }
+  .stop:not(:last-child)::after { content: "↓"; right: auto; left: 50%; top: auto; bottom: -11px; transform: translateX(-50%); }
+}
+</style>
+
+<nav class="topnav" aria-label="Seções">
+  <div class="wrap">
+    <a href="#viagem">Visão geral</a>
+    <a href="#servidor">Servidor</a>
+    <a href="#requisicoes">Requisições</a>
+    <a href="#html">HTML e CSS</a>
+    <a href="#ejs">EJS</a>
+    <a href="#mongodb">MongoDB</a>
+    <a href="#projeto">Projeto</a>
+    <a href="#erros">Erros</a>
+  </div>
+</nav>
+
+<main>
+  <header class="hero" id="viagem">
+    <div class="wrap">
+      <p class="eyebrow">CCP120 · Programação Full Stack</p>
+      <h1>Guia da Prova Full Stack</h1>
+      <p class="lead">Todo o conteúdo da prova é uma única viagem: o dado sai de um formulário, passa pelo servidor, vai para o banco e volta como uma página pronta. Cada bloco deste guia é uma parada dessa viagem.</p>
+
+      <div class="trip">
+        <a class="stop" href="#html"><span class="n">1 · navegador</span><strong>Formulário</strong><span class="d">A pessoa preenche e clica em Enviar</span></a>
+        <a class="stop" href="#requisicoes"><span class="n">2 · HTTP</span><strong>GET ou POST</strong><span class="d">Os dados vão para uma rota, como /cadastrar</span></a>
+        <a class="stop" href="#servidor"><span class="n">3 · Node + Express</span><strong>Rota</strong><span class="d">A função da rota recebe os dados</span></a>
+        <a class="stop" href="#mongodb"><span class="n">4 · porta 27017</span><strong>MongoDB</strong><span class="d">Grava ou busca no banco</span></a>
+        <a class="stop" href="#ejs"><span class="n">5 · views</span><strong>EJS</strong><span class="d">Monta a página com o resultado e devolve</span></a>
+      </div>
+
+      <div class="analogia">
+        <p><strong>Para explicar aos colegas:</strong> o servidor é um <strong>garçom</strong>. O formulário é o pedido, a rota é a mesa para onde o pedido vai, o banco é a <strong>cozinha</strong> e o EJS é o prato montado que volta para a mesa.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== BLOCO 1 ===================== -->
+  <section class="block" id="servidor">
+    <div class="wrap">
+      <h2><span class="tag">Bloco 1</span>JavaScript e servidor</h2>
+
+      <h3>O que é o Node.js?</h3>
+      <p>O JavaScript nasceu para rodar <strong>dentro do navegador</strong>. O Node.js é um programa que roda JavaScript <strong>fora do navegador</strong>, direto no computador. É ele que permite usar JavaScript para criar um <strong>servidor</strong>.</p>
+      <ul>
+        <li>No navegador, o JS mexe na página: botões, canvas, <code>getElementById</code>.</li>
+        <li>No Node.js, o JS recebe pedidos da internet, lê arquivos e conversa com o banco.</li>
+        <li>Para rodar um arquivo: <code>node servidor.js</code> no terminal.</li>
+      </ul>
+
+      <h3>O que é o npm?</h3>
+      <p><strong>npm = Node Package Manager</strong>, ou "gerenciador de pacotes do Node". Um <strong>pacote</strong> é um código pronto que outra pessoa escreveu e publicou. O npm baixa esses pacotes para o seu projeto, como uma loja de aplicativos para código.</p>
+      <figure class="code"><figcaption><span>terminal</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>npm init -y                                        # cria o package.json
+npm install express body-parser ejs mongodb@4.12  # baixa os pacotes da prova</code></pre></figure>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>var express = require(&quot;express&quot;);   // usa um pacote baixado pelo npm</code></pre></figure>
+
+      <h3>O que é o Express?</h3>
+      <p>É um pacote que facilita muito criar o servidor. Sem ele, você teria que tratar cada detalhe do protocolo HTTP na mão. Com ele, criar uma rota é uma linha:</p>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>app.get(&quot;/listar&quot;, function (requisicao, resposta) {
+    // o que acontece quando alguém acessa /listar
+});</code></pre></figure>
+
+      <h3>package.json, package-lock.json e node_modules</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Arquivo</th><th>O que é</th><th>Analogia</th></tr></thead>
+        <tbody>
+          <tr><td><code>package.json</code></td><td>A <strong>lista de pacotes</strong> que o projeto usa, com a versão aproximada de cada um. Você pode ler e editar.</td><td>A lista de compras</td></tr>
+          <tr><td><code>package-lock.json</code></td><td>Gerado sozinho. Anota a <strong>versão exata</strong> de cada pacote e dos pacotes que eles usam por dentro, para todo mundo instalar exatamente igual. Não se edita.</td><td>A nota fiscal, com marca e lote de cada item</td></tr>
+          <tr><td><code>node_modules/</code></td><td>A pasta com os pacotes <strong>baixados</strong> de verdade. É enorme e fica fora do Git (<code>.gitignore</code>).</td><td>As compras na despensa</td></tr>
+        </tbody>
+      </table></div>
+      <p>Se alguém apagar a <code>node_modules</code>, basta rodar <code>npm install</code> na pasta do projeto: o npm lê o <code>package.json</code> e o <code>-lock</code> e baixa tudo de novo.</p>
+
+      <h3>Estrutura do projeto</h3>
+      <figure class="code"><figcaption><span>pastas</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>biblioteca/
+├── servidor.js          ← o código do servidor
+├── package.json         ← lista de pacotes
+├── package-lock.json    ← versões exatas (gerado sozinho)
+├── node_modules/        ← pacotes baixados (fora do Git)
+├── public/              ← arquivos FIXOS: index.html, estilo.css, imagens
+└── views/               ← páginas DINÂMICAS (.ejs)</code></pre></figure>
+      <ul>
+        <li><strong>public:</strong> o servidor entrega do jeito que está, igual para todo mundo (<code>express.static</code>).</li>
+        <li><strong>views:</strong> o servidor <strong>monta</strong> a página na hora, com os dados de cada pedido (<code>resposta.render</code>).</li>
+      </ul>
+
+      <h3>O que é a porta?</h3>
+      <p>O computador é um prédio e o <strong>IP</strong> é o endereço dele. A <strong>porta</strong> é o número do apartamento: vários programas podem rodar no mesmo computador, cada um "morando" numa porta diferente.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Porta</th><th>Quem usa</th></tr></thead>
+        <tbody>
+          <tr><td><code>80</code></td><td>Padrão da web. É a que o slide usa (<code>server.listen(80)</code>), e o acesso é com <code>localhost</code> direto</td></tr>
+          <tr><td><code>3000</code></td><td>Muito usada em desenvolvimento. O acesso é com <code>localhost:3000</code></td></tr>
+          <tr><td><code>27017</code></td><td>Padrão do <strong>MongoDB</strong>. É por ela que o servidor conversa com o banco</td></tr>
+        </tbody>
+      </table></div>
+      <p><code>localhost</code> significa "este mesmo computador". De outro PC na mesma rede, use o IP da máquina, por exemplo <code>192.168.1.101:3000</code>.</p>
+
+      <h3>Rotas</h3>
+      <p>Uma <strong>rota</strong> é a combinação de um <strong>método</strong> (GET ou POST) com um <strong>caminho</strong> (<code>/cadastrar</code>). Cada rota é um balcão de atendimento do servidor, com uma função que roda quando alguém chega nele.</p>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>//      método  caminho          função que atende
+app.post(&quot;/cadastrar&quot;, function (requisicao, resposta) {
+    // requisicao = o que CHEGOU (dados do formulário)
+    // resposta   = o que o servidor DEVOLVE (uma página)
+});</code></pre></figure>
+      <p><span class="m get">GET</span> <code>/cadastrar</code> e <span class="m post">POST</span> <code>/cadastrar</code> são <strong>rotas diferentes</strong>, mesmo com o mesmo caminho.</p>
+
+      <h3>Gravar e buscar no banco (resumo)</h3>
+      <ul>
+        <li><strong>Gravar:</strong> <code>colecao.insertOne(dados, function (err) { ... })</code></li>
+        <li><strong>Buscar:</strong> <code>colecao.find(filtro).toArray(function (err, items) { ... })</code></li>
+        <li><strong>Atualizar:</strong> <code>await colecao.updateOne(filtro, { $set: { campo: novoValor } })</code></li>
+      </ul>
+      <p>Os detalhes estão no <a href="#mongodb">Bloco 5</a>.</p>
+    </div>
+  </section>
+
+  <!-- ===================== BLOCO 2 ===================== -->
+  <section class="block" id="requisicoes">
+    <div class="wrap">
+      <h2><span class="tag">Bloco 2</span>Requisições e métodos</h2>
+
+      <h3>O que é uma requisição?</h3>
+      <p>É um <strong>pedido</strong> que o navegador (cliente) manda para o servidor. O servidor sempre devolve uma <strong>resposta</strong>. Essa conversa segue as regras do protocolo <strong>HTTP</strong>.</p>
+      <ul>
+        <li>Digitar <code>localhost:3000/listar</code> na barra de endereço é uma requisição.</li>
+        <li>Clicar em Enviar num formulário é uma requisição.</li>
+        <li>Clicar num link é uma requisição.</li>
+      </ul>
+      <p>Toda requisição tem um <strong>método</strong> (GET, POST...), um <strong>caminho</strong> (<code>/listar</code>) e, às vezes, <strong>dados</strong> (o que foi digitado no formulário).</p>
+
+      <h3>O que o método significa para o servidor?</h3>
+      <p>O método diz <strong>a intenção</strong> do pedido. O servidor usa o método e o caminho juntos para escolher qual rota vai atender.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th></th><th><span class="m get">GET</span></th><th><span class="m post">POST</span></th></tr></thead>
+        <tbody>
+          <tr><td>Intenção</td><td><strong>Pegar / buscar</strong> alguma coisa</td><td><strong>Enviar / gravar</strong> alguma coisa</td></tr>
+          <tr><td>Onde vão os dados</td><td>Na <strong>URL</strong>: <code>/buscar?email=ana@email.com</code></td><td>No <strong>corpo</strong> da requisição, invisível na URL</td></tr>
+          <tr><td>Como o servidor lê</td><td><code>requisicao.query.email</code></td><td><code>requisicao.body.email</code></td></tr>
+          <tr><td>Precisa de body-parser?</td><td>Não</td><td><strong>Sim</strong></td></tr>
+          <tr><td>Dá para salvar nos favoritos?</td><td>Sim, a busca fica na URL</td><td>Não</td></tr>
+          <tr><td>Quando usar</td><td>Buscas, listagens, abrir páginas</td><td>Cadastro, login, senha, atualizar</td></tr>
+        </tbody>
+      </table></div>
+      <div class="note"><p><strong>Regra prática:</strong> senha nunca vai por GET, porque apareceria na URL e no histórico do navegador.</p></div>
+
+      <h3>O body-parser</h3>
+      <p>No POST os dados vêm no corpo da requisição, num formato que o Express não lê sozinho. O body-parser "abre o envelope" e coloca os dados em <code>requisicao.body</code>. Sem ele, <code>requisicao.body</code> fica <code>undefined</code>.</p>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>var bodyParser = require(&quot;body-parser&quot;);
+app.use(bodyParser.urlencoded({ extended: false }));   // lê formulários HTML
+app.use(bodyParser.json());                            // lê JSON</code></pre></figure>
+
+      <h3>Como as rotas funcionam no servidor</h3>
+      <p>Quando chega uma requisição, o Express procura, de cima para baixo, a primeira rota com o <strong>mesmo método</strong> e o <strong>mesmo caminho</strong>:</p>
+      <ol>
+        <li>Chegou <span class="m post">POST</span> <code>/cadastrar</code>.</li>
+        <li>O Express procura um <code>app.post("/cadastrar", ...)</code> e roda a função dele.</li>
+        <li>A função lê os dados, fala com o banco e responde.</li>
+        <li>Se nenhuma rota combinar, o navegador mostra <strong>Cannot GET /caminho</strong> (ou Cannot POST).</li>
+      </ol>
+      <p><strong>A ligação entre o HTML e a rota</strong> está no formulário. Os dois lados têm que bater exatamente:</p>
+      <figure class="code"><figcaption><span>public/index.html</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;form action=&quot;/cadastrar&quot; method=&quot;post&quot;&gt;     &lt;!-- caminho e método --&gt;
+    &lt;input type=&quot;text&quot; name=&quot;nome&quot;&gt;           &lt;!-- name = nome do dado --&gt;
+&lt;/form&gt;</code></pre></figure>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>app.post(&quot;/cadastrar&quot;, function (requisicao, resposta) {   // mesmo método e caminho
+    var nome = requisicao.body.nome;                        // mesmo name
+});</code></pre></figure>
+
+      <h3>As três formas de responder</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Comando</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td><code>resposta.send("texto")</code></td><td>Devolve um texto simples</td></tr>
+          <tr><td><code>resposta.redirect("pagina.html")</code></td><td>Manda o navegador ir para outra página</td></tr>
+          <tr><td><code>resposta.render("arquivo", { dados })</code></td><td>Monta uma página EJS com os dados (<a href="#ejs">Bloco 4</a>)</td></tr>
+        </tbody>
+      </table></div>
+      <p>Cada requisição recebe <strong>uma</strong> resposta só. Duas respostas na mesma rota dão o erro <em>Cannot set headers after they are sent</em>.</p>
+    </div>
+  </section>
+
+  <!-- ===================== BLOCO 3 ===================== -->
+  <section class="block" id="html">
+    <div class="wrap">
+      <h2><span class="tag">Bloco 3</span>HTML e CSS</h2>
+      <p class="section-lead">Na prova, o HTML só precisa de uma página com formulário para mandar os dados ao servidor.</p>
+
+      <h3>O formulário</h3>
+      <figure class="code"><figcaption><span>public/index.html</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;form action=&quot;/cadastrar&quot; method=&quot;post&quot;&gt;
+    &lt;input type=&quot;text&quot; name=&quot;nome&quot; placeholder=&quot;Nome&quot; required&gt;
+    &lt;input type=&quot;email&quot; name=&quot;email&quot; placeholder=&quot;E-mail&quot; required&gt;
+    &lt;input type=&quot;password&quot; name=&quot;senha&quot; placeholder=&quot;Senha&quot; required&gt;
+    &lt;input type=&quot;date&quot; name=&quot;nascimento&quot;&gt;
+    &lt;input type=&quot;submit&quot; value=&quot;Cadastrar&quot;&gt;
+&lt;/form&gt;</code></pre></figure>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Atributo</th><th>Para que serve</th></tr></thead>
+        <tbody>
+          <tr><td><code>action</code></td><td><strong>Para qual rota</strong> os dados vão</td></tr>
+          <tr><td><code>method</code></td><td><strong>Como</strong> vão: <code>get</code> (na URL) ou <code>post</code> (no corpo)</td></tr>
+          <tr><td><code>name</code></td><td>O <strong>nome do dado</strong>. É ele que vira <code>requisicao.body.nome</code> ou <code>requisicao.query.nome</code> no servidor. <strong>Sem <code>name</code>, o campo não é enviado.</strong></td></tr>
+          <tr><td><code>placeholder</code></td><td>Texto cinza de dica dentro do campo</td></tr>
+          <tr><td><code>required</code></td><td>O navegador não deixa enviar com o campo vazio</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Tipos de input</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>type</th><th>O que mostra</th><th>Detalhe</th></tr></thead>
+        <tbody>
+          <tr><td><code>text</code></td><td>Campo de texto comum</td><td>Aceita qualquer coisa</td></tr>
+          <tr><td><code>email</code></td><td>Campo de e-mail</td><td>O navegador recusa enviar sem <code>@</code></td></tr>
+          <tr><td><code>password</code></td><td>Campo de senha</td><td>Mostra bolinhas no lugar das letras</td></tr>
+          <tr><td><code>date</code></td><td>Calendário para escolher a data</td><td>Chega no servidor como texto no formato <code>2004-05-10</code> (ano-mês-dia)</td></tr>
+          <tr><td><code>submit</code></td><td>Botão que <strong>envia</strong> o formulário</td><td>O <code>value</code> é o texto do botão</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>CSS básico da página</h3>
+      <p>O arquivo de estilo fica em <code>public/estilo.css</code> e é ligado no <code>&lt;head&gt;</code> do HTML com <code>&lt;link rel="stylesheet" href="estilo.css"&gt;</code>.</p>
+      <figure class="code"><figcaption><span>public/estilo.css</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>body {
+    display: flex;
+    flex-direction: column;   /* um elemento embaixo do outro */
+    align-items: center;      /* centraliza na horizontal */
+}
+
+.cartao {
+    width: 320px;
+    padding: 20px;            /* espaço DENTRO da borda */
+    margin: 10px;             /* espaço FORA da borda */
+    border-radius: 12px;      /* bordas arredondadas */
+    background-color: white;
+}</code></pre></figure>
+      <p><strong>Padding e margin</strong>, a dúvida mais comum:</p>
+      <ul>
+        <li><strong>padding</strong> é o espaço <strong>de dentro</strong>, entre a borda e o conteúdo. É o enchimento da almofada.</li>
+        <li><strong>margin</strong> é o espaço <strong>de fora</strong>, entre a borda e os vizinhos. É a distância entre duas almofadas.</li>
+      </ul>
+      <div class="table-scroll"><table>
+        <thead><tr><th>O que centralizar</th><th>Como</th></tr></thead>
+        <tbody>
+          <tr><td>Texto</td><td><code>text-align: center;</code></td></tr>
+          <tr><td>Uma caixa com largura definida</td><td><code>margin: 0 auto;</code></td></tr>
+          <tr><td>Vários elementos</td><td>No pai: <code>display: flex; flex-direction: column; align-items: center;</code></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ===================== BLOCO 4 ===================== -->
+  <section class="block" id="ejs">
+    <div class="wrap">
+      <h2><span class="tag">Bloco 4</span>EJS</h2>
+
+      <h3>O problema que o EJS resolve</h3>
+      <p>Um <code>.html</code> em <code>public</code> é <strong>estático</strong>: mostra sempre a mesma coisa. Mas depois de cadastrar, a página tem que dizer "Leitor <strong>Ana</strong> cadastrado", e na busca tem que listar <strong>os leitores que vieram do banco</strong>. Esse conteúdo muda a cada pedido.</p>
+      <p>O EJS é um <strong>HTML com buracos</strong>. O servidor preenche os buracos com os dados e devolve o HTML pronto. O navegador nem fica sabendo que existiu um EJS.</p>
+
+      <h3>Configuração (uma vez, no servidor)</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>// npm install ejs
+app.set(&quot;view engine&quot;, &quot;ejs&quot;);   // vou usar EJS para montar as páginas
+app.set(&quot;views&quot;, &quot;./views&quot;);     // os arquivos .ejs ficam na pasta views</code></pre></figure>
+
+      <h3>As duas tags</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Tag</th><th>O que faz</th><th>Exemplo</th></tr></thead>
+        <tbody>
+          <tr><td><code>&lt;%= variavel %&gt;</code></td><td><strong>Mostra</strong> o valor na página</td><td><code>&lt;h2&gt;&lt;%= mensagem %&gt;&lt;/h2&gt;</code></td></tr>
+          <tr><td><code>&lt;% codigo %&gt;</code></td><td><strong>Executa</strong> JavaScript, sem mostrar nada</td><td><code>&lt;% if (...) { %&gt;</code> e <code>&lt;% for (...) { %&gt;</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>Para lembrar: o <strong>=</strong> da primeira tag é de "mostre o resultado".</p>
+
+      <h3>Como o servidor manda os dados</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>resposta.render(&quot;resposta&quot;, { mensagem: &quot;Leitor cadastrado com sucesso!&quot; });
+//              ↑ views/resposta.ejs   ↑ cada chave vira uma variável no EJS</code></pre></figure>
+      <figure class="code"><figcaption><span>views/resposta.ejs</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;!-- views/resposta.ejs --&gt;
+&lt;h2&gt;&lt;%= mensagem %&gt;&lt;/h2&gt;
+&lt;a href=&quot;/&quot;&gt;Voltar&lt;/a&gt;</code></pre></figure>
+      <p>O nome no <code>render</code> vai <strong>sem</strong> a extensão <code>.ejs</code> e <strong>sem</strong> o nome da pasta, porque o <code>app.set("views", ...)</code> já diz onde procurar.</p>
+
+      <h3>Mostrando uma lista do banco (if + for)</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>resposta.render(&quot;lista&quot;, { leitores: items });   // items = o array que veio do find</code></pre></figure>
+      <figure class="code"><figcaption><span>views/lista.ejs</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;h2&gt;Leitores encontrados: &lt;%= leitores.length %&gt;&lt;/h2&gt;
+
+&lt;% if (leitores.length == 0) { %&gt;
+    &lt;p&gt;Nenhum leitor encontrado.&lt;/p&gt;
+&lt;% } %&gt;
+
+&lt;% for (var i = 0; i &lt; leitores.length; i++) { %&gt;
+    &lt;p&gt;&lt;strong&gt;&lt;%= leitores[i].db_nome %&gt;&lt;/strong&gt; - &lt;%= leitores[i].db_email %&gt;&lt;/p&gt;
+&lt;% } %&gt;</code></pre></figure>
+      <p><strong>Por que o <code>{</code> e o <code>}</code> ficam em tags separadas:</strong> o <code>for</code> abre na primeira tag, o HTML do meio se repete uma vez para cada leitor, e o <code>}</code> fecha o <code>for</code> na outra tag. Tudo entre elas é o corpo do laço.</p>
+    </div>
+  </section>
+
+  <!-- ===================== BLOCO 5 ===================== -->
+  <section class="block" id="mongodb">
+    <div class="wrap">
+      <h2><span class="tag">Bloco 5</span>MongoDB</h2>
+
+      <h3>Banco, collection e documento</h3>
+      <p>O MongoDB é um banco <strong>não relacional</strong> (NoSQL): em vez de tabelas com linhas e colunas, ele guarda <strong>documentos</strong> parecidos com objetos do JavaScript.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>MongoDB</th><th>Equivalente em SQL</th><th>Analogia</th></tr></thead>
+        <tbody>
+          <tr><td>Banco (database)</td><td>Banco</td><td>O arquivo de aço inteiro</td></tr>
+          <tr><td>Collection</td><td>Tabela</td><td>Uma gaveta ("leitores", "livros")</td></tr>
+          <tr><td>Documento</td><td>Linha (registro)</td><td>Uma ficha dentro da gaveta</td></tr>
+        </tbody>
+      </table></div>
+      <figure class="code"><figcaption><span>um documento da collection leitores</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>{
+    _id: ObjectId(&quot;6740a1...&quot;),     // criado sozinho pelo MongoDB
+    db_nome: &quot;Ana Souza&quot;,
+    db_email: &quot;ana@email.com&quot;,
+    db_senha: &quot;123&quot;,
+    db_nascimento: &quot;2004-05-10&quot;
+}</code></pre></figure>
+      <p>O banco e a collection <strong>nascem sozinhos</strong> no primeiro <code>insertOne</code>. Não precisa criar nada antes no Compass.</p>
+
+      <h3>A conexão (sempre os mesmos 4 passos)</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>// npm install mongodb@4.12
+var mongodb = require(&quot;mongodb&quot;);                       // 1. o pacote
+const MongoClient = mongodb.MongoClient;
+
+const uri = &quot;mongodb://127.0.0.1:27017&quot;;                // 2. o endereço do banco
+const client = new MongoClient(uri, { useNewUrlParser: true });   // 3. o cliente
+
+var dbo = client.db(&quot;biblioteca&quot;);                      // 4a. qual banco
+var leitores = dbo.collection(&quot;leitores&quot;);              // 4b. qual collection</code></pre></figure>
+      <p><strong>Lendo a connection string</strong> <code>mongodb://127.0.0.1:27017</code>:</p>
+      <ul>
+        <li><code>mongodb://</code> é o protocolo, como o <code>http://</code> dos sites.</li>
+        <li><code>127.0.0.1</code> é "este computador", o mesmo que <code>localhost</code>.</li>
+        <li><code>27017</code> é a porta padrão do MongoDB.</li>
+      </ul>
+      <div class="note">
+        <p>No Compass, essa é a string que já aparece em <strong>New Connection</strong> (<code>mongodb://localhost:27017</code>). No código, prefira <strong>127.0.0.1</strong>: nas versões novas do Node, <code>localhost</code> pode ser traduzido para o endereço IPv6 <code>::1</code>, e a conexão falha com <em>ECONNREFUSED ::1:27017</em>.</p>
+        <p><strong>Por que a versão 4.12:</strong> os slides usam callbacks (<code>function (err) {...}</code>) dentro do <code>insertOne</code> e do <code>toArray</code>. A partir da versão 5 do pacote, os callbacks foram removidos e esse código para de funcionar.</p>
+      </div>
+
+      <h3>Gravar (Create): insertOne</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>var data = {
+    db_nome: requisicao.body.nome,
+    db_email: requisicao.body.email
+};
+
+leitores.insertOne(data, function (err) {
+    if (err) {
+        resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao cadastrar!&quot; });
+    } else {
+        resposta.render(&quot;resposta&quot;, { mensagem: &quot;Cadastrado com sucesso!&quot; });
+    }
+});</code></pre></figure>
+      <p><strong>Por que a resposta fica dentro da função:</strong> gravar no banco leva um tempinho. A função (callback) só roda <strong>quando o banco termina</strong>. Se o <code>render</code> ficasse fora dela, a página diria "sucesso" antes de o banco responder.</p>
+
+      <h3>Buscar (Read): find + toArray</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>var filtro = { db_email: requisicao.query.email };
+
+leitores.find(filtro).toArray(function (err, items) {
+    // items é SEMPRE um array: [] se não achou nada
+    if (items.length == 0) {
+        resposta.render(&quot;resposta&quot;, { mensagem: &quot;Nada encontrado!&quot; });
+    } else {
+        resposta.render(&quot;lista&quot;, { leitores: items });
+    }
+});</code></pre></figure>
+      <p><strong>Como o filtro funciona:</strong> o <code>find</code> traz os documentos em que <strong>todos</strong> os campos do filtro são iguais.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Filtro</th><th>O que traz</th></tr></thead>
+        <tbody>
+          <tr><td><code>{}</code></td><td><strong>Todos</strong> os documentos da collection</td></tr>
+          <tr><td><code>{ db_email: "ana@email.com" }</code></td><td>Quem tem esse e-mail</td></tr>
+          <tr><td><code>{ db_email: "ana@email.com", db_senha: "123" }</code></td><td>Quem tem esse e-mail <strong>e</strong> essa senha (é assim que o login funciona)</td></tr>
+        </tbody>
+      </table></div>
+      <p>O <code>toArray</code> existe porque o <code>find</code> não devolve os documentos direto: ele devolve um "cursor" (um ponteiro). O <code>toArray</code> transforma o resultado num array normal.</p>
+
+      <h3>Atualizar (Update): updateOne + $set</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>app.post(&quot;/atualizar&quot;, async function (requisicao, resposta) {
+    try {
+        var filtro = { db_email: requisicao.body.email, db_senha: requisicao.body.senha };
+        var novosDados = { $set: { db_senha: requisicao.body.novasenha } };
+
+        const result = await leitores.updateOne(filtro, novosDados);
+
+        if (result.matchedCount == 0) {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Ninguém encontrado com esses dados!&quot; });
+        } else {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Atualizado com sucesso!&quot; });
+        }
+    } catch (err) {
+        resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao atualizar!&quot; });
+    }
+});</code></pre></figure>
+      <ul>
+        <li><strong>Filtro:</strong> <strong>quem</strong> vai ser atualizado.</li>
+        <li><strong><code>$set</code>:</strong> <strong>o que</strong> muda. Só os campos dentro dele são alterados, o resto do documento fica igual.</li>
+        <li><strong><code>matchedCount</code>:</strong> quantos documentos combinaram com o filtro. Se for 0, ninguém foi encontrado.</li>
+        <li><strong><code>async</code> / <code>await</code> / <code>try</code> / <code>catch</code>:</strong> outro jeito de esperar o banco, no lugar do callback. O <code>await</code> espera o banco antes de ir para a próxima linha, e o <code>catch</code> pega os erros. A palavra <code>async</code> precisa estar na função da rota para o <code>await</code> funcionar.</li>
+      </ul>
+
+      <h3>Resumo dos métodos</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Operação</th><th>Método</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Create</td><td><code>insertOne(dados, callback)</code></td><td>Grava um documento</td></tr>
+          <tr><td>Read</td><td><code>find(filtro).toArray(callback)</code></td><td>Array com os documentos encontrados</td></tr>
+          <tr><td>Update</td><td><code>await updateOne(filtro, { $set: {...} })</code></td><td><code>result.matchedCount</code></td></tr>
+          <tr><td>Delete (fora da prova)</td><td><code>await deleteOne(filtro)</code></td><td><code>result.deletedCount</code></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ===================== PROJETO ===================== -->
+  <section class="block" id="projeto">
+    <div class="wrap">
+      <h2><span class="tag">Projeto</span>Biblioteca: Create, Read e Update</h2>
+      <p class="section-lead">Cadastro de leitores de uma biblioteca, com cadastrar, listar, buscar por e-mail, login e troca de senha. Para trocar de cenário (escola, loja, academia), basta mudar os nomes: o banco, a collection, os campos do formulário e os <code>db_</code> no servidor.</p>
+      <div class="note"><p>Todas as rotas foram testadas com o Node 22 e os mesmos pacotes da prova, usando uma collection simulada em memória no lugar do MongoDB. O teste contra o Compass de verdade é o único que ficou faltando.</p></div>
+
+      <h3>Passo a passo no terminal</h3>
+      <figure class="code"><figcaption><span>terminal</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>mkdir biblioteca
+cd biblioteca
+npm init -y
+npm install express body-parser ejs mongodb@4.12
+mkdir public views</code></pre></figure>
+      <p>Depois de criar os arquivos abaixo, com o MongoDB aberto no Compass: <code>node servidor.js</code> e abrir <code>localhost:3000</code> no navegador.</p>
+
+      <h3>Os 5 arquivos</h3>
+      <figure class="code"><figcaption><span>servidor.js</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>// ===== 1. PACOTES =====
+var http = require(&quot;http&quot;);
+var express = require(&quot;express&quot;);
+var bodyParser = require(&quot;body-parser&quot;);
+var mongodb = require(&quot;mongodb&quot;);
+
+// ===== 2. CONFIGURAÇÃO DO EXPRESS =====
+var app = express();
+app.use(express.static(&quot;./public&quot;));                  // arquivos fixos: html, css, imagens
+app.use(bodyParser.urlencoded({ extended: false }));  // lê os dados do POST (formulário)
+app.use(bodyParser.json());
+app.set(&quot;view engine&quot;, &quot;ejs&quot;);                        // páginas dinâmicas com EJS
+app.set(&quot;views&quot;, &quot;./views&quot;);                          // pasta onde ficam os .ejs
+
+// ===== 3. CONEXÃO COM O MONGODB (Compass local) =====
+const MongoClient = mongodb.MongoClient;
+const uri = &quot;mongodb://127.0.0.1:27017&quot;;
+const client = new MongoClient(uri, { useNewUrlParser: true });
+
+var dbo = client.db(&quot;biblioteca&quot;);            // banco
+var leitores = dbo.collection(&quot;leitores&quot;);    // collection
+
+// ===== 4. ROTAS =====
+
+// página inicial (o express.static já abre o public/index.html em &quot;/&quot;;
+// esta rota serve para quando a página tiver outro nome, como home.html)
+app.get(&quot;/&quot;, function (requisicao, resposta) {
+    resposta.redirect(&quot;index.html&quot;);
+});
+
+// CREATE: cadastrar leitor (POST, dados no corpo)
+app.post(&quot;/cadastrar&quot;, function (requisicao, resposta) {
+    var data = {
+        db_nome: requisicao.body.nome,
+        db_email: requisicao.body.email,
+        db_senha: requisicao.body.senha,
+        db_nascimento: requisicao.body.nascimento
+    };
+
+    leitores.insertOne(data, function (err) {
+        if (err) {
+            console.log(err);
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao cadastrar leitor!&quot; });
+        } else {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Leitor &quot; + data.db_nome + &quot; cadastrado com sucesso!&quot; });
+        }
+    });
+});
+
+// READ: listar todos os leitores (GET, sem filtro)
+app.get(&quot;/listar&quot;, function (requisicao, resposta) {
+    leitores.find({}).toArray(function (err, items) {
+        if (err) {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao buscar leitores!&quot; });
+        } else {
+            resposta.render(&quot;lista&quot;, { leitores: items });
+        }
+    });
+});
+
+// READ: buscar por e-mail (GET, dado na URL: /buscar?email=...)
+app.get(&quot;/buscar&quot;, function (requisicao, resposta) {
+    var filtro = { db_email: requisicao.query.email };
+
+    leitores.find(filtro).toArray(function (err, items) {
+        if (err) {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao buscar leitor!&quot; });
+        } else {
+            resposta.render(&quot;lista&quot;, { leitores: items });
+        }
+    });
+});
+
+// READ: login (POST, confere e-mail e senha)
+app.post(&quot;/login&quot;, function (requisicao, resposta) {
+    var filtro = { db_email: requisicao.body.email, db_senha: requisicao.body.senha };
+
+    leitores.find(filtro).toArray(function (err, items) {
+        if (err) {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao fazer login!&quot; });
+        } else if (items.length == 0) {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;E-mail ou senha incorretos!&quot; });
+        } else {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Bem-vindo(a), &quot; + items[0].db_nome + &quot;!&quot; });
+        }
+    });
+});
+
+// UPDATE: trocar a senha (POST, confere a senha atual)
+app.post(&quot;/atualizar&quot;, async function (requisicao, resposta) {
+    try {
+        var filtro = { db_email: requisicao.body.email, db_senha: requisicao.body.senha };
+        var novosDados = { $set: { db_senha: requisicao.body.novasenha } };
+
+        const result = await leitores.updateOne(filtro, novosDados);
+
+        if (result.matchedCount == 0) {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;E-mail ou senha atual incorretos!&quot; });
+        } else {
+            resposta.render(&quot;resposta&quot;, { mensagem: &quot;Senha atualizada com sucesso!&quot; });
+        }
+    } catch (err) {
+        console.log(err);
+        resposta.render(&quot;resposta&quot;, { mensagem: &quot;Erro ao atualizar!&quot; });
+    }
+});
+
+// ===== 5. LIGAR O SERVIDOR =====
+var server = http.createServer(app);
+server.listen(3000);
+console.log(&quot;Servidor rodando em http://localhost:3000&quot;);</code></pre></figure>
+      <figure class="code"><figcaption><span>public/index.html</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;pt-BR&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Biblioteca&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;estilo.css&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Biblioteca&lt;/h1&gt;
+
+    &lt;!-- CREATE --&gt;
+    &lt;form class=&quot;cartao&quot; action=&quot;/cadastrar&quot; method=&quot;post&quot;&gt;
+        &lt;h2&gt;Cadastrar leitor&lt;/h2&gt;
+        &lt;input type=&quot;text&quot; name=&quot;nome&quot; placeholder=&quot;Nome&quot; required&gt;
+        &lt;input type=&quot;email&quot; name=&quot;email&quot; placeholder=&quot;E-mail&quot; required&gt;
+        &lt;input type=&quot;password&quot; name=&quot;senha&quot; placeholder=&quot;Senha&quot; required&gt;
+        &lt;label&gt;Nascimento &lt;input type=&quot;date&quot; name=&quot;nascimento&quot;&gt;&lt;/label&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Cadastrar&quot;&gt;
+    &lt;/form&gt;
+
+    &lt;!-- READ (GET) --&gt;
+    &lt;form class=&quot;cartao&quot; action=&quot;/buscar&quot; method=&quot;get&quot;&gt;
+        &lt;h2&gt;Buscar por e-mail&lt;/h2&gt;
+        &lt;input type=&quot;email&quot; name=&quot;email&quot; placeholder=&quot;E-mail&quot; required&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Buscar&quot;&gt;
+        &lt;a href=&quot;/listar&quot;&gt;Ver todos os leitores&lt;/a&gt;
+    &lt;/form&gt;
+
+    &lt;!-- READ (POST) --&gt;
+    &lt;form class=&quot;cartao&quot; action=&quot;/login&quot; method=&quot;post&quot;&gt;
+        &lt;h2&gt;Login&lt;/h2&gt;
+        &lt;input type=&quot;email&quot; name=&quot;email&quot; placeholder=&quot;E-mail&quot; required&gt;
+        &lt;input type=&quot;password&quot; name=&quot;senha&quot; placeholder=&quot;Senha&quot; required&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Entrar&quot;&gt;
+    &lt;/form&gt;
+
+    &lt;!-- UPDATE --&gt;
+    &lt;form class=&quot;cartao&quot; action=&quot;/atualizar&quot; method=&quot;post&quot;&gt;
+        &lt;h2&gt;Trocar senha&lt;/h2&gt;
+        &lt;input type=&quot;email&quot; name=&quot;email&quot; placeholder=&quot;E-mail&quot; required&gt;
+        &lt;input type=&quot;password&quot; name=&quot;senha&quot; placeholder=&quot;Senha atual&quot; required&gt;
+        &lt;input type=&quot;password&quot; name=&quot;novasenha&quot; placeholder=&quot;Nova senha&quot; required&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Atualizar&quot;&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></figure>
+      <figure class="code"><figcaption><span>public/estilo.css</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>body {
+    font-family: Arial, sans-serif;
+    background-color: #eef2f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* centraliza tudo na horizontal */
+    margin: 0;
+    padding: 20px;
+}
+
+.cartao {
+    background-color: white;
+    width: 320px;
+    padding: 20px;            /* espaço DENTRO do cartão */
+    margin: 10px;             /* espaço FORA do cartão */
+    border-radius: 12px;      /* bordas arredondadas */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;                /* espaço entre os campos */
+}
+
+input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+input[type=&quot;submit&quot;] {
+    background-color: #2a78d6;
+    color: white;
+    border: none;
+    cursor: pointer;
+}</code></pre></figure>
+      <figure class="code"><figcaption><span>views/resposta.ejs</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;pt-BR&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Resposta&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;estilo.css&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;cartao&quot;&gt;
+        &lt;h2&gt;&lt;%= mensagem %&gt;&lt;/h2&gt;
+        &lt;a href=&quot;/&quot;&gt;Voltar&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></figure>
+      <figure class="code"><figcaption><span>views/lista.ejs</span><button type="button" class="copy">Copiar</button></figcaption><pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;pt-BR&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Leitores&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;estilo.css&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&quot;cartao&quot;&gt;
+        &lt;h2&gt;Leitores encontrados: &lt;%= leitores.length %&gt;&lt;/h2&gt;
+
+        &lt;% if (leitores.length == 0) { %&gt;
+            &lt;p&gt;Nenhum leitor encontrado.&lt;/p&gt;
+        &lt;% } %&gt;
+
+        &lt;% for (var i = 0; i &lt; leitores.length; i++) { %&gt;
+            &lt;p&gt;
+                &lt;strong&gt;&lt;%= leitores[i].db_nome %&gt;&lt;/strong&gt;&lt;br&gt;
+                &lt;%= leitores[i].db_email %&gt; · nascimento: &lt;%= leitores[i].db_nascimento %&gt;
+            &lt;/p&gt;
+        &lt;% } %&gt;
+
+        &lt;a href=&quot;/&quot;&gt;Voltar&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></figure>
+
+      <h3>Resultado do teste</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Ação</th><th>Resposta da página</th></tr></thead>
+        <tbody>
+          <tr><td>Cadastrar Ana e Bruno</td><td>"Leitor Ana Souza cadastrado com sucesso!" (e o mesmo para Bruno)</td></tr>
+          <tr><td>Ver todos</td><td>"Leitores encontrados: 2", com os dois nomes</td></tr>
+          <tr><td>Buscar ana@email.com</td><td>"Leitores encontrados: 1", com nome, e-mail e nascimento</td></tr>
+          <tr><td>Buscar e-mail inexistente</td><td>"Leitores encontrados: 0" e "Nenhum leitor encontrado."</td></tr>
+          <tr><td>Login com senha certa / errada</td><td>"Bem-vindo(a), Ana Souza!" / "E-mail ou senha incorretos!"</td></tr>
+          <tr><td>Trocar senha 123 → 456</td><td>"Senha atualizada com sucesso!", e o login passa a funcionar com 456</td></tr>
+          <tr><td>Trocar senha usando a antiga de novo</td><td>"E-mail ou senha atual incorretos!"</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ===================== ERROS ===================== -->
+  <section class="block" id="erros">
+    <div class="wrap">
+      <h2><span class="tag">Prova</span>Erros comuns e checklist</h2>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Erro</th><th>Causa mais comum</th><th>Correção</th></tr></thead>
+        <tbody>
+          <tr><td><code>Cannot GET /cadastrar</code></td><td>O formulário está com <code>method="get"</code>, mas a rota é <code>app.post</code> (ou o contrário)</td><td>Deixe o <code>method</code> do form igual ao <code>app.get</code> / <code>app.post</code></td></tr>
+          <tr><td><code>Cannot read properties of undefined (reading 'nome')</code></td><td>Faltou o body-parser, então <code>requisicao.body</code> não existe</td><td>Adicione as duas linhas do <code>bodyParser</code> antes das rotas</td></tr>
+          <tr><td>O dado chega <code>undefined</code></td><td>O <code>name</code> do input é diferente do que o servidor lê</td><td><code>name="email"</code> no HTML → <code>requisicao.body.email</code> no servidor</td></tr>
+          <tr><td><code>Failed to lookup view "resposta"</code></td><td>O <code>.ejs</code> não está na pasta <code>views</code> ou o nome está diferente</td><td>Confira a pasta e o nome, sem <code>.ejs</code> no <code>render</code></td></tr>
+          <tr><td><code>mensagem is not defined</code> dentro do EJS</td><td>O <code>render</code> não mandou essa variável</td><td>Cada <code>&lt;%= x %&gt;</code> precisa de uma chave <code>x</code> no <code>render</code></td></tr>
+          <tr><td><code>ECONNREFUSED ::1:27017</code></td><td>O Node tentou <code>localhost</code> pelo IPv6</td><td>Use <code>mongodb://127.0.0.1:27017</code></td></tr>
+          <tr><td><code>ECONNREFUSED 127.0.0.1:27017</code></td><td>O MongoDB não está rodando</td><td>Abra o Compass e conecte, ou inicie o serviço do MongoDB</td></tr>
+          <tr><td><code>Cannot find module 'express'</code></td><td>Os pacotes não foram instalados nesta pasta</td><td><code>npm install express body-parser ejs mongodb@4.12</code> dentro da pasta do projeto</td></tr>
+          <tr><td><code>EADDRINUSE :::3000</code></td><td>Outro servidor já está usando a porta</td><td>Feche o terminal antigo (Ctrl + C) ou troque a porta</td></tr>
+          <tr><td>O callback do <code>insertOne</code> nunca roda</td><td>Pacote <code>mongodb</code> na versão 5 ou mais nova</td><td>Reinstale com <code>npm install mongodb@4.12</code></td></tr>
+          <tr><td>A página carrega sem estilo</td><td>O CSS não está em <code>public</code> ou faltou o <code>express.static</code></td><td><code>app.use(express.static("./public"))</code> e <code>&lt;link href="estilo.css"&gt;</code></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Checklist antes de entregar</h3>
+      <ul class="check">
+        <li><input type="checkbox" id="c1"><label for="c1"><code>npm init -y</code> e os 4 pacotes instalados (<code>express</code>, <code>body-parser</code>, <code>ejs</code>, <code>mongodb@4.12</code>)</label></li>
+        <li><input type="checkbox" id="c2"><label for="c2">Pastas <code>public</code> (HTML e CSS) e <code>views</code> (EJS) criadas</label></li>
+        <li><input type="checkbox" id="c3"><label for="c3"><code>express.static</code>, <code>bodyParser</code> e <code>view engine</code> configurados <strong>antes</strong> das rotas</label></li>
+        <li><input type="checkbox" id="c4"><label for="c4">Connection string <code>mongodb://127.0.0.1:27017</code>, <code>client.db(...)</code> e <code>.collection(...)</code></label></li>
+        <li><input type="checkbox" id="c5"><label for="c5">Cada <code>&lt;form&gt;</code> com <code>action</code> e <code>method</code> iguais a uma rota do servidor</label></li>
+        <li><input type="checkbox" id="c6"><label for="c6">Cada <code>&lt;input&gt;</code> com <code>name</code></label></li>
+        <li><input type="checkbox" id="c7"><label for="c7">Senha sempre por POST</label></li>
+        <li><input type="checkbox" id="c8"><label for="c8"><code>render</code> dentro do callback (ou depois do <code>await</code>), nunca fora</label></li>
+        <li><input type="checkbox" id="c9"><label for="c9">Cada rota dá <strong>uma</strong> resposta só</label></li>
+        <li><input type="checkbox" id="c10"><label for="c10">Testou criar, buscar e atualizar, e conferiu os documentos no Compass</label></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Guia de estudo · CCP120 Programação Full Stack · Node.js, Express, EJS e MongoDB</div>
+</footer>
+
+<script>
+(function () {
+  function selecionar(el) {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+  document.querySelectorAll("button.copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const code = b.closest("figure").querySelector("code");
+      const pronto = function () {
+        b.textContent = "Copiado";
+        setTimeout(function () { b.textContent = "Copiar"; }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code.textContent).then(pronto).catch(function () { selecionar(code); });
+      } else {
+        selecionar(code);
+      }
+    });
+  });
+})();
+</script>
+
+</body></html>
